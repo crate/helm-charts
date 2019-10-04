@@ -1,7 +1,10 @@
 # helm-charts
-Helm charts for Kubernetes and repo for [Helm Hub](https://hub.helm.sh/charts/crate).
+
+This is a community maintained repository containing a Helm chart for CrateDB
+for [Helm Hub](https://hub.helm.sh/charts/crate).
 
 Chart sources are in `/src/<chart>`, their packaged result in `/docs/<chart>`.
+
 
 ## Usage
 
