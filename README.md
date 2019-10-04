@@ -1,5 +1,5 @@
 # helm-charts
-Helm charts for Kubernetes and repo for [Helm Hub](https://github.com/helm/hub).
+Helm charts for Kubernetes and repo for [Helm Hub](https://hub.helm.sh/charts/crate).
 
 Chart sources are in `/src/<chart>`, their packaged result in `/docs/<chart>`.
 
