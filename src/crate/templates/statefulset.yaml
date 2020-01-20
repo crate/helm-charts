@@ -36,7 +36,6 @@ spec:
             - -Ccluster.name={{ include "crate.clusterName" . }}
             - -Cdiscovery.seed_providers=srv
             - -Cdiscovery.srv.query=_{{ include "crate.clusterName" . }}._tcp.{{ .Values.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
-            - -Clicense.enterprise=false
             - -Cnetwork.host="0.0.0.0"
             - -Cnode.name="$POD_NAME"
             - -Cgateway.expected_nodes={{ .Values.crate.numberOfNodes }}
