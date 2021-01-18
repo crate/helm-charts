@@ -19,6 +19,9 @@ spec:
       annotations:
         pod.alpha.kubernetes.io/initialized: "true"
     spec:
+      {{- if .Values.serviceAccountName }}
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      {{- end }}
       initContainers:
         - name: init-sysctl
           image: busybox
@@ -46,6 +49,8 @@ spec:
             {{- if .Values.resources.limits.cpu }}
             - -Cprocessors="$MIN_VCPU_COUNT"
             {{- end }}
+          securityContext:
+            privileged: true
           volumeMounts:
             - mountPath: /data
               name: data

@@ -35,3 +35,6 @@ service:
     psql: 5432
     ui: 4200
   type: ClusterIP
+
+## Set the service account to be used. In restricted environments like openshift, it needs to be an account that allows privilege escalation.
+# serviceAccountName: crate
