@@ -12,7 +12,7 @@ http:
     enabled: false
 
 image:
-  tag: 4.0.4
+  tag: 5.0.0
 
 persistentVolume:
   annotations: {}
