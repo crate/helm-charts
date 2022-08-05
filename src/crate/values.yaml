@@ -34,4 +34,3 @@ service:
   ports:
     psql: 5432
     ui: 4200
-  type: ClusterIP
