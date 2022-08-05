@@ -30,8 +30,7 @@ spec:
         - name: crate
           image: crate:{{ .Values.image.tag }}
           imagePullPolicy: IfNotPresent
-          command:
-            - /docker-entrypoint.sh
+          args:
             - -Ccluster.initial_master_nodes={{ include "crate.initialMasterNodes" . }}
             - -Ccluster.name={{ include "crate.clusterName" . }}
             - -Cdiscovery.seed_providers=srv
