@@ -38,8 +38,8 @@ spec:
             - -Cdiscovery.srv.query=_transport._tcp.{{ .Values.service.name }}.{{ .Release.Namespace }}.svc.cluster.local
             - -Cnetwork.host="0.0.0.0"
             - -Cnode.name="$POD_NAME"
-            - -Cgateway.expected_nodes={{ .Values.crate.numberOfNodes }}
-            - -Cgateway.recover_after_nodes={{ include "crate.recoverAfterNodes" . }}
+            - -Cgateway.expected_data_nodes={{ .Values.crate.numberOfNodes }}
+            - -Cgateway.recover_after_data_nodes={{ include "crate.recoverAfterNodes" . }}
             - -Chttp.cors.allow-origin={{ .Values.http.cors.allowOrigin }}
             - -Chttp.cors.enabled={{ .Values.http.cors.enabled }}
             - -Cpath.data=/data
