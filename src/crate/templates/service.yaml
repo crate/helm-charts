@@ -10,6 +10,9 @@ metadata:
   labels:
     app: {{ .Values.app }}
 spec:
+  # A Headless Service is used for CrateDB node discovery.
+  # Returns the IP adresses of the associated CrateDB Pods.
+  clusterIP: None
   ports:
     - name: psql
       port: {{ .Values.service.ports.psql }}
@@ -17,6 +20,5 @@ spec:
       port: 4300
     - name: ui
       port: {{ .Values.service.ports.ui }}
-  type: {{ .Values.service.type }}
   selector:
     app: {{ .Values.app }}
