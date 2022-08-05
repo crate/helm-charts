@@ -1,3 +1,5 @@
+#!/bin/bash
+
 package:
 	ls src | xargs -I@ helm package --destination='docs/@' 'src/@'
 
