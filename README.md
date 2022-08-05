@@ -1,7 +1,7 @@
 # helm-charts
 
 This is a community maintained repository containing a Helm chart for CrateDB
-for [Helm Hub](https://hub.helm.sh/charts/crate).
+for [Artifact Hub](https://artifacthub.io/packages/helm/crate/crate).
 
 Chart sources are in `/src/<chart>`, their packaged result in `/docs/<chart>`.
 

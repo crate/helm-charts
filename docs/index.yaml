@@ -1,6 +1,21 @@
 apiVersion: v1
 entries:
   crate:
+  - apiVersion: v2
+    appVersion: "5"
+    created: "2022-08-05T12:30:50.028492+02:00"
+    description: CrateDB is a distributed SQL database that handles massive amounts
+      of machine data in real-time. This is a Helm chart for CrateDB, to simplify
+      even further its deployment on Kubernetes clusters.
+    digest: 7c4b622c0f8a94a0daf78f486b8c7ca43e541e21bb5de6d5570c34b8c17a27bf
+    home: https://crate.io
+    icon: https://crate.io/docs/crate/tutorials/en/latest/_static/images/crate-logo.svg
+    name: crate
+    sources:
+    - https://github.com/crate/crate
+    urls:
+    - crate/crate-0.2.0.tgz
+    version: 0.2.0
   - apiVersion: v1
     appVersion: "4"
     created: "2019-09-27T19:12:03.678338+01:00"
@@ -21,4 +36,4 @@ entries:
     urls:
     - crate/crate-0.1.0.tgz
     version: 0.1.0
-generated: "2019-09-27T19:12:03.677532+01:00"
+generated: "2022-08-05T12:30:50.02747+02:00"
