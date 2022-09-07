@@ -1,7 +1,7 @@
 #!/bin/bash
 
 package:
-	ls src | xargs -I@ helm package --destination='docs/@' 'src/@'
+	ls charts | xargs -I@ helm package --destination='docs/@' 'charts/@'
 
 repo: package
 	helm repo index docs
