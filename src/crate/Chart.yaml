@@ -1,9 +1,20 @@
 apiVersion: v2
 name: crate
-version: 0.2.0
-description: CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time. This is a Helm chart for CrateDB, to simplify even further its deployment on Kubernetes clusters.
+version: 0.3.0
+description: CrateDB is a distributed SQL database that handles massive amounts of machine data in real-time. This is a Helm chart for CrateDB, to simplify even further its deployment on Kubernetes clusters with optional Prometheus monitoring and Grafana dashboards.
 appVersion: 5.0
 home: https://crate.io
 icon: https://crate.io/docs/crate/tutorials/en/latest/_static/images/crate-logo.svg
 sources:
   - https://github.com/crate/crate
+
+dependencies:
+  - name: prometheus
+    version: "~27"
+    repository: https://prometheus-community.github.io/helm-charts
+    condition: prometheus.enabled
+    alias: prometheus
+  - name: grafana
+    version: "~9.0.0"
+    repository: https://grafana.github.io/helm-charts
+    condition: grafana.enabled

@@ -2,6 +2,11 @@ apiVersion: "apps/v1"
 kind: StatefulSet
 metadata:
   name: crate
+  labels:
+    app: {{ .Values.app }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
 spec:
   serviceName: "crate-db"
   replicas: {{ .Values.crate.numberOfNodes }}
@@ -18,19 +23,46 @@ spec:
         app.kubernetes.io/managed-by: helm
       annotations:
         pod.alpha.kubernetes.io/initialized: "true"
+        {{- if and .Values.monitoring.enabled .Values.monitoring.annotations.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.monitoring.annotations.port }}"
+        prometheus.io/path: "{{ .Values.monitoring.annotations.path }}"
+        {{- end }}
     spec:
       initContainers:
         - name: init-sysctl
-          image: busybox
+          image: busybox:1.35.0
           imagePullPolicy: IfNotPresent
-          command: ["sysctl", "-w", "vm.max_map_count=262144"]
+          command: 
+            - sysctl
+            - -w
+            - vm.max_map_count=262144
+            - net.ipv4.tcp_keepalive_time=120
+            - net.ipv4.tcp_keepalive_intvl=30
+            - net.ipv4.tcp_keepalive_probes=6
           securityContext:
             privileged: true
+        {{- if .Values.crate.jmx.exporter.enabled }}
+        - name: fetch-jmx-exporter
+          image: busybox:1.35.0
+          imagePullPolicy: IfNotPresent
+          command:
+            - wget
+            - -O
+            - /jmxdir/crate-jmx-exporter-{{ .Values.crate.jmx.exporter.version }}.jar
+            - https://repo1.maven.org/maven2/io/crate/crate-jmx-exporter/{{ .Values.crate.jmx.exporter.version }}/crate-jmx-exporter-{{ .Values.crate.jmx.exporter.version }}.jar
+          volumeMounts:
+            - name: jmxdir
+              mountPath: /jmxdir
+        {{- end }}
       containers:
         - name: crate
           image: crate:{{ .Values.image.tag }}
           imagePullPolicy: IfNotPresent
           args:
+            {{- if .Values.crate.stats.enabled }}
+            - -Cstats.enabled=true
+            {{- end }}
             - -Ccluster.initial_master_nodes={{ include "crate.initialMasterNodes" . }}
             - -Ccluster.name={{ include "crate.clusterName" . }}
             - -Cdiscovery.seed_providers=srv
@@ -48,63 +80,100 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: data
+            {{- if .Values.crate.jmx.exporter.enabled }}
+            - mountPath: /var/lib/crate/crate-jmx-exporter-{{ .Values.crate.jmx.exporter.version }}.jar
+              name: jmxdir
+              subPath: crate-jmx-exporter-{{ .Values.crate.jmx.exporter.version }}.jar
+            {{- end }}
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}
               memory: {{ mul .Values.crate.heapSize 2 }}Gi
             limits:
               cpu: {{ .Values.resources.limits.cpu }}
-              memory: {{ if $m := .Values.resources.limits.memory -}}
-                {{ $m }}{{ else }}{{ mul .Values.crate.heapSize 3 }}Gi
-              {{- end }}
+              memory: {{ if .Values.resources.limits.memory }}{{ .Values.resources.limits.memory }}{{ else }}{{ mul .Values.crate.heapSize 3 }}Gi{{ end }}
           ports:
             - containerPort: {{ .Values.service.ports.psql }}
               name: psql
-            - containerPort: 4300
+            - containerPort: {{ .Values.service.ports.transport }}
               name: transport
             - containerPort: {{ .Values.service.ports.ui }}
               name: ui
+            {{- if .Values.crate.jmx.enabled }}
+            - containerPort: {{ .Values.crate.jmx.port }}
+              name: jmx
+            {{- end }}
+            {{- if .Values.crate.jmx.exporter.enabled }}
+            - containerPort: {{ .Values.crate.jmx.exporter.port }}
+              name: prometheus
+            {{- end }}
           env:
             - name: CRATE_HEAP_SIZE
               value: {{ .Values.crate.heapSize }}g
             - name: CLUSTER_NAME
-              value: {{ .Values.crate.clusterName | quote }}
+              value: {{ include "crate.clusterName" . | quote }}
+            {{- if .Values.resources.limits.cpu }}
             - name: MIN_VCPU_COUNT
               valueFrom:
                 resourceFieldRef:
                   resource: requests.cpu
                   divisor: 1
+            {{- end }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          livenessProbe:
-            exec:
-              command: ["sh", "-c", "curl http://localhost:4200 2&>/dev/null | grep '\"ok\" : true'"]
-            initialDelaySeconds: 100
-            periodSeconds: 60
-{{- if .Values.persistentVolume.enabled }}
+            {{- if or .Values.crate.jmx.enabled .Values.crate.jmx.exporter.enabled }}
+            - name: CRATE_JAVA_OPTS
+              value: "{{ .Values.javaOpts.jmx }}{{- if .Values.crate.jmx.exporter.enabled }} -javaagent:/var/lib/crate/crate-jmx-exporter-{{ .Values.crate.jmx.exporter.version }}.jar={{ .Values.crate.jmx.exporter.port }}{{- end }} {{ .Values.javaOpts.heapDump }} {{ .Values.javaOpts.security }}"
+            {{- end }}
+          {{- if .Values.crate.jmx.exporter.enabled }}
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: {{ .Values.crate.jmx.exporter.port }}
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+          {{- else }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 4200
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+          {{- end }}
+      volumes:
+        {{- if .Values.crate.jmx.exporter.enabled }}
+        - name: jmxdir
+          emptyDir: {}
+        {{- end }}
   volumeClaimTemplates:
     - metadata:
         name: data
         annotations:
-        {{- range $key, $value := .Values.persistentVolume.annotations }}
-          {{ $key }}: {{ $value }}
-        {{- end }}
+          {{- range $key, $value := .Values.persistentVolume.annotations }}
+          {{ $key }}: {{ $value | quote }}
+          {{- end }}
       spec:
         accessModes:
-        {{- range .Values.persistentVolume.accessModes }}
+          {{- range .Values.persistentVolume.accessModes }}
           - {{ . | quote }}
-        {{- end }}
+          {{- end }}
         resources:
           requests:
             storage: {{ .Values.persistentVolume.size | quote }}
-      {{- if .Values.persistentVolume.storageClass }}
-        storageClassName: "{{ .Values.persistentVolume.storageClass }}"
-      {{- end }}
-{{- else }}
-      volumes:
-        - name: data
-          emptyDir:
-            medium: "Memory"
-{{- end }}
+        {{- if .Values.persistentVolume.storageClass }}
+        {{- if (eq "-" .Values.persistentVolume.storageClass) }}
+        storageClassName: ""
+        {{- else }}
+        storageClassName: {{ .Values.persistentVolume.storageClass | quote }}
+        {{- end }}
+        {{- end }}

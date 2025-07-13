@@ -1,9 +1,39 @@
-If you want to get a sneak peek at the CrateDB UI, you can forward the `4200` port.
+1. CrateDB has been deployed successfully!
 
-Assuming deployment is ready...
+2. To access the CrateDB Admin UI:
+   kubectl port-forward svc/{{ .Values.service.name }} 4200:4200
+   
+   Then navigate to: http://localhost:4200
 
-```
-kubectl port-forward crate-0 4200:4200
-```
+3. To connect to CrateDB via PostgreSQL protocol:
+   kubectl port-forward svc/{{ .Values.service.name }} 5432:5432
+   
+   Connection string: postgresql://crate@localhost:5432/
 
-Now open a browser at http://localhost:4200, you should see the CrateDB's Admin UI.
+{{- if .Values.monitoring.enabled }}
+
+4. Monitoring is enabled:
+   {{- if .Values.prometheus.enabled }}
+   - Prometheus: kubectl port-forward svc/{{ include "crate.fullname" . }}-prometheus 9090:9090
+   {{- end }}
+   {{- if .Values.grafana.enabled }}
+   - Grafana: kubectl port-forward svc/{{ include "crate.fullname" . }}-grafana 3000:80
+     Default credentials: admin/{{ .Values.grafana.adminPassword }}
+   {{- end }}
+
+{{- end }}
+
+5. Cluster Information:
+   - Nodes: {{ .Values.crate.numberOfNodes }}
+   - Heap Size: {{ .Values.crate.heapSize }}GiB
+   - Cluster Name: {{ include "crate.clusterName" . }}
+
+6. To check the status of your CrateDB cluster:
+   kubectl logs -l app={{ .Values.app }}
+
+{{- if .Values.persistentVolume.enabled }}
+   
+7. Persistent storage is enabled with {{ .Values.persistentVolume.size }} per node.
+{{- end }}
+
+For more information, visit: https://cratedb.com/docs

@@ -9,6 +9,15 @@ metadata:
   name: {{ .Values.service.name }}
   labels:
     app: {{ .Values.app }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  {{- if and .Values.monitoring.enabled .Values.monitoring.annotations.enabled }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "{{ .Values.monitoring.annotations.port }}"
+    prometheus.io/path: "{{ .Values.monitoring.annotations.path }}"
+  {{- end }}
 spec:
   # A Headless Service is used for CrateDB node discovery.
   # Returns the IP adresses of the associated CrateDB Pods.
@@ -17,8 +26,16 @@ spec:
     - name: psql
       port: {{ .Values.service.ports.psql }}
     - name: transport
-      port: 4300
+      port: {{ .Values.service.ports.transport }}
     - name: ui
       port: {{ .Values.service.ports.ui }}
+    {{- if .Values.crate.jmx.enabled }}
+    - name: jmx
+      port: {{ .Values.service.ports.jmx }}
+    {{- end }}
+    {{- if .Values.crate.jmx.exporter.enabled }}
+    - name: prometheus
+      port: {{ .Values.service.ports.prometheus }}
+    {{- end }}
   selector:
     app: {{ .Values.app }}

@@ -1,0 +1,80 @@
+1. Get the application URL by running these commands:
+
+{{- if .Values.monitoring.enabled }}
+## 🎉 CrateDB with Monitoring Stack Deployed Successfully!
+
+### 📊 Access Your Services:
+
+**CrateDB Admin UI:**
+  kubectl port-forward -n {{ .Release.Namespace }} crate-0 4200:4200
+  Then visit: http://localhost:4200
+
+{{- if .Values.prometheus.enabled }}
+**Prometheus UI:**
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Release.Name }}-prometheus-server 9090:80
+  Then visit: http://localhost:9090
+{{- end }}
+
+{{- if .Values.grafana.enabled }}
+**Grafana Dashboard:**
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Release.Name }}-grafana 3000:80
+  Then visit: http://localhost:3000
+  Username: admin
+  Password: {{ .Values.grafana.adminPassword }}
+{{- end }}
+
+{{- if .Values.crate.jmx.exporter.enabled }}
+**JMX Exporter Metrics:**
+  kubectl port-forward -n {{ .Release.Namespace }} crate-0 7071:7071
+  Then visit: http://localhost:7071/metrics
+{{- end }}
+
+### 🔧 Database Connection:
+
+**PostgreSQL Protocol:**
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Values.service.name }} 5432:5432
+  Connection: postgresql://crate@localhost:5432/
+
+**Direct Pod Connection:**
+  kubectl exec -it -n {{ .Release.Namespace }} crate-0 -- crash
+
+### 📈 Monitoring Features:
+
+✅ JMX Exporter: {{ if .Values.crate.jmx.exporter.enabled }}Enabled{{ else }}Disabled{{ end }}
+✅ Stats Collection: {{ if .Values.crate.stats.enabled }}Enabled{{ else }}Disabled{{ end }}
+✅ Prometheus Discovery: {{ if .Values.monitoring.annotations.enabled }}Annotation-based{{ else }}Disabled{{ end }}
+{{- if .Values.prometheus.enabled }}
+✅ Prometheus Stack: Deployed
+{{- end }}
+{{- if .Values.grafana.enabled }}
+✅ Grafana Dashboards: Deployed
+{{- end }}
+
+{{- else }}
+
+## 🎉 CrateDB Deployed Successfully!
+
+### 📊 Access Your Services:
+
+**CrateDB Admin UI:**
+  kubectl port-forward -n {{ .Release.Namespace }} crate-0 4200:4200
+  Then visit: http://localhost:4200
+
+### 🔧 Database Connection:
+
+**PostgreSQL Protocol:**
+  kubectl port-forward -n {{ .Release.Namespace }} svc/{{ .Values.service.name }} 5432:5432
+  Connection: postgresql://crate@localhost:5432/
+
+**Direct Pod Connection:**
+  kubectl exec -it -n {{ .Release.Namespace }} crate-0 -- crash
+
+{{- end }}
+
+### 📚 Documentation:
+
+- CrateDB Documentation: https://cratedb.com/docs
+- SQL Reference: https://cratedb.com/docs/guide/feature/sql/
+
+For more information about this deployment, run:
+  helm status {{ .Release.Name }} -n {{ .Release.Namespace }}
