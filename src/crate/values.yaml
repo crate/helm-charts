@@ -3,7 +3,7 @@ app: crate
 crate:
   clusterName: null
   heapSize: 1.0  # GiB
-  numberOfNodes: 1
+  numberOfNodes: 3
   recoverAfterNodes: null
 
 http:
@@ -12,7 +12,7 @@ http:
     enabled: false
 
 image:
-  tag: 5.0.0
+  tag: 6.1.2
 
 persistentVolume:
   annotations: {}
