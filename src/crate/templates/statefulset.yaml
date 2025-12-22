@@ -19,6 +19,8 @@ spec:
       annotations:
         pod.alpha.kubernetes.io/initialized: "true"
     spec:
+      securityContext:
+        fsGroup: 1000
       initContainers:
         - name: init-sysctl
           image: busybox
@@ -30,6 +32,11 @@ spec:
         - name: crate
           image: crate:{{ .Values.image.tag }}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            capabilities:
+              add:
+              - SYS_CHROOT
+            runAsUser: 1000
           args:
             - -Ccluster.initial_master_nodes={{ include "crate.initialMasterNodes" . }}
             - -Ccluster.name={{ include "crate.clusterName" . }}
@@ -78,11 +85,6 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
-          livenessProbe:
-            exec:
-              command: ["sh", "-c", "curl http://localhost:4200 2&>/dev/null | grep '\"ok\" : true'"]
-            initialDelaySeconds: 100
-            periodSeconds: 60
 {{- if .Values.persistentVolume.enabled }}
   volumeClaimTemplates:
     - metadata:
