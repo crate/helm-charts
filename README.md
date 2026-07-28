@@ -1,3 +1,7 @@
+> [!IMPORTANT]
+> **This repository is deprecated and archived.** 
+> Please consider using the [CrateDB Kubernetes Operator](https://github.com/crate/crate-operator) as an alternative.
+
 # helm-charts
 
 This is a community maintained repository containing a Helm chart for CrateDB
